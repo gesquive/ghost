@@ -1,0 +1,48 @@
+image: golang:1.10.3
+
+stages:
+  - test
+  - build
+  - deploy
+
+before_script:
+  - make link
+  - pushd $(make path)
+  - make deps
+
+tests:
+  stage: test
+  script:
+    - make test
+
+build:
+  stage: build
+  script:
+    - make
+
+deploy-dev:
+  stage: deploy
+  script:
+    - make dist
+  environment:
+    name: development
+  artifacts:
+    paths:
+      - dist/*-v*.tar.gz
+      - dist/*-v*.zip
+  only:
+    - tags
+
+deploy-prod:
+  stage: deploy
+  script:
+    - make dist
+  environment:
+    name: production
+  artifacts:
+    paths:
+      - dist/*-v*.tar.gz
+      - dist/*-v*.zip
+  when: manual
+  only:
+    - tags
