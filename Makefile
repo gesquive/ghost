@@ -92,7 +92,7 @@ package-dist: gop
 	--os="linux darwin windows" \
 	--arch="amd64 386" \
 	--archive="tar.gz" \
-	--files="LICENSE README.md pkg" \
+	--files="LICENSE README.md" \
 	--input="dist/{{.OS}}-{{.Arch}}/{{.Dir}}" \
 	--output="dist/{{.Dir}}-${VERSION}-{{.OS}}-{{.Arch}}.{{.Archive}}" .
 
@@ -108,6 +108,10 @@ link: $(INSTALL_PATH) ## Symlink this project into the GOPATH
 $(INSTALL_PATH):
 	@mkdir -p `dirname $(INSTALL_PATH)`
 	@ln -s $(PWD) $(INSTALL_PATH) >/dev/null 2>&1
+
+.PHONY: path # Returns the project path
+path:
+	@echo $(INSTALL_PATH)
 
 ${LOCAL_BIN}: 
 	@mkdir -p ${LOCAL_BIN}
