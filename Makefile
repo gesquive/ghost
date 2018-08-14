@@ -10,33 +10,36 @@ GOCC := go
 VERSION := $(shell git describe --always --tags)
 
 # Binary name for bintray
-BIN_NAME=ghost
+BIN_NAME ?= ghost
 
 # Project owner for bintray
-OWNER=gesquive
+OWNER ?= gesquive
 
 # Project name for bintray
-PROJECT_NAME=ghost
+PROJECT_NAME ?= ghost
 
 # Project url used for builds
-# examples: github.com, bitbucket.org
-REPO_HOST_URL=github.com
+# examples: github.com, gitlab.com, bitbucket.org
+REPO_HOST_URL ?= github.com
 
 # Grab the current commit
-GIT_COMMIT=$(shell git rev-parse HEAD)
+GIT_COMMIT := $(shell git rev-parse HEAD)
 
 # Check if there are uncommited changes
-GIT_DIRTY=$(shell test -n "`git status --porcelain`" && echo "+CHANGES" || true)
+GIT_DIRTY := $(shell test -n "`git status --porcelain`" && echo "+CHANGES" || true)
 
 # Use a local vendor directory for any dependencies; comment this out to
 # use the global GOPATH instead
 # GOPATH=$(PWD)
 
-INSTALL_PATH=$(GOPATH)/src/${REPO_HOST_URL}/${OWNER}/${PROJECT_NAME}
-LOCAL_BIN=bin
-GOTEMP:=$(shell mktemp -d)
+PKG_NAME := ${REPO_HOST_URL}/${OWNER}/${PROJECT_NAME}
+INSTALL_PATH := ${GOPATH}/src/${PKG_NAME}
 
-export SHELL := /bin/bash
+LOCAL_BIN ?= bin
+GOTEMP := $(shell mktemp -d)
+PKG_LIST := ./...
+
+export SHELL ?= /bin/bash
 export PATH := ${PWD}/${LOCAL_BIN}:${PATH}
 
 default: test build
@@ -64,11 +67,24 @@ deps: glide ## Download project dependencies
 
 .PHONY: test
 test: ## Run golang tests
-	${GOCC} test ./...
+	${GOCC} test ${PKG_LIST}
 
 .PHONY: bench
 bench: ## Run golang benchmarks
-	${GOCC} test -benchmem -bench=. ./...
+	${GOCC} test -benchmem -bench=. ${PKG_LIST}
+
+.PHONY: cover
+cover: ## Run coverage report
+	${GOCC} test -v -cover ${PKG_LIST}
+
+.PHONY: cover-report
+cover-report: ## Generate global code coverage report
+	${GOCC} test -v -coverprofile coverage.dat ${PKG_LIST}
+	${GOCC} tool cover -html=coverage.dat -o coverage.html
+
+.PHONY: race
+race: ## Run data race detector
+	${GOCC} test -race ${PKG_LIST}
 
 .PHONY: clean
 clean: ## Clean the directory tree

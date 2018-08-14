@@ -1,5 +1,10 @@
 image: golang:1.10.3
 
+.cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - vendor/
+
 stages:
   - test
   - build
@@ -10,10 +15,20 @@ before_script:
   - pushd $(make path)
   - make deps
 
-tests:
+unit-tests:
   stage: test
   script:
     - make test
+
+race-detector:
+  stage: test
+  script:
+    - make race
+
+code-coverage:
+  stage: test
+  script:
+    - make cover
 
 build:
   stage: build

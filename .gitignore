@@ -8,3 +8,6 @@ scripts/
 
 config*.yml
 ghost
+
+coverage.dat
+coverage.html
