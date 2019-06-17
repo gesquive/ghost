@@ -1,9 +1,9 @@
-image: golang:1.10.3
+image: golang:1.12.5
 
 .cache:
   key: "$CI_COMMIT_REF_SLUG"
   paths:
-    - vendor/
+    - /go
 
 stages:
   - test
@@ -11,29 +11,39 @@ stages:
   - deploy
 
 before_script:
-  - make link
-  - pushd $(make path)
   - make deps
 
-unit-tests:
+unit_tests:
   stage: test
   script:
     - make test
 
-race-detector:
+race_detector:
   stage: test
   script:
     - make race
 
-code-coverage:
+code_coverage:
   stage: test
   script:
-    - make cover
+    - make coverage
+  coverage: '/coverage: \d+.\d+% of statements/'
 
 build:
   stage: build
   script:
     - make
+
+pages:
+  stage: deploy
+  script:
+    - make coverage-report
+    - mv coverage/ public/
+  artifacts:
+    paths:
+      - public
+  only:
+    - master
 
 deploy-dev:
   stage: deploy
