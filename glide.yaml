@@ -1,6 +1,0 @@
-package: github.com/gesquive/ghost
-import:
-- package: github.com/spf13/cobra
-  version: ^0.0.3
-- package: github.com/spf13/viper
-  version: ^1.1.0
