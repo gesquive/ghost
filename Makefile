@@ -7,7 +7,7 @@
 GOCC := go
 
 # Program version
-VERSION := $(shell git describe --always --tags)
+MK_VERSION := $(shell git describe --always --tags)
 
 # Check if there are uncommited changes
 GIT_DIRTY := $(shell test -n "`git status --porcelain`" && echo "+CHANGES" || true)
@@ -38,9 +38,9 @@ help:
 
 .PHONY: build
 build: ## Compile the project
-	@echo "building ${OWNER} ${BIN_NAME} ${VERSION}"
+	@echo "building ${OWNER} ${BIN_NAME} ${MK_VERSION}"
 	@echo "GOPATH=${GOPATH}"
-	${GOCC} build -ldflags "-X main.version=${VERSION} -X main.dirty=${GIT_DIRTY}" -o ${BIN_NAME}
+	${GOCC} build -ldflags "-X main.version=${MK_VERSION} -X main.dirty=${GIT_DIRTY}" -o ${BIN_NAME}
 
 .PHONY: install
 install: build ## Install the binary
@@ -94,7 +94,7 @@ clean: ## Clean the directory tree
 .PHONY: build-dist
 build-dist: gox
 	gox -verbose \
-	-ldflags "-X main.version=${VERSION} -X main.dirty=${GIT_DIRTY}" \
+	-ldflags "-X main.version=${MK_VERSION} -X main.dirty=${GIT_DIRTY}" \
 	-os=${DIST_OS} \
 	-arch=${DIST_ARCH} \
 	-output="${DIST_PATH}/{{.OS}}-{{.Arch}}/{{.Dir}}" .
@@ -107,7 +107,7 @@ package-dist: gop
 	--archive=${DIST_ARCHIVE} \
 	--files=${DIST_FILES} \
 	--input="${DIST_PATH}/{{.OS}}-{{.Arch}}/{{.Dir}}" \
-	--output="${DIST_PATH}/{{.Dir}}-${VERSION}-{{.OS}}-{{.Arch}}.{{.Archive}}" .
+	--output="${DIST_PATH}/{{.Dir}}-${MK_VERSION}-{{.OS}}-{{.Arch}}.{{.Archive}}" .
 
 .PHONY: dist
 dist: build-dist package-dist ## Cross compile and package the full distribution

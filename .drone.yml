@@ -2,21 +2,52 @@ kind: pipeline
 name: default
 
 steps:
-- name: test
-  image: golang
-  volumes:
-  - name: deps
-    path: /go
+- name: fetch
+  image: docker:git
   commands:
-  - go test
+  - git fetch --tags
 
 - name: build
-  image: golang
+  image: golang:1.12.6
   volumes:
   - name: deps
     path: /go
   commands:
-  - go build
+  - make build
+
+- name: unit_tests
+  image: golang:1.12.6
+  volumes:
+  - name: deps
+    path: /go
+  commands:
+  - make test
+  - make race
+  - make coverage
+
+- name: build_dist
+  image: golang:1.12.6
+  volumes:
+  - name: deps
+    path: /go
+  commands:
+  - make dist
+  when:
+    event: tag
+
+- name: release
+  image: plugins/github-release
+  settings:
+    api_key:
+      from_secret: github_token
+    files: 
+    - "dist/*-v*.tar.gz"
+    - "dist/*-v*.zip"
+    checksum:
+    - md5
+    - sha256
+  when:
+    event: tag
 
 volumes:
 - name: deps
