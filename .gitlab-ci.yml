@@ -1,44 +1,72 @@
 image: golang:1.12.5
 
-.cache:
+variables:
+  GOPATH: ${CI_PROJECT_DIR}/vendor/go
+  LOCAL_BIN: bin
+
+.modcache: &modcache
   key: "$CI_COMMIT_REF_SLUG"
   paths:
-    - /go
+    - vendor/go/pkg/mod
+    - bin
+
+before_script:
+  - make deps
 
 stages:
+  - deps
   - test
   - build
   - deploy
 
-before_script:
-  - make deps
+dependencies:
+  stage: deps
+  script:
+    - make gop
+    - make gox
+  cache: *modcache
 
 unit_tests:
   stage: test
   script:
     - make test
+  cache:
+    <<: *modcache
+    policy: pull
 
 race_detector:
   stage: test
   script:
     - make race
+  cache:
+    <<: *modcache
+    policy: pull
 
 code_coverage:
   stage: test
+  coverage: '/coverage: \d+.\d+% of statements/'
   script:
     - make coverage
-  coverage: '/coverage: \d+.\d+% of statements/'
+  cache:
+    <<: *modcache
+    policy: pull
 
 build:
   stage: build
   script:
     - make
+  cache:
+    <<: *modcache
+    policy: pull
 
 pages:
   stage: deploy
   script:
     - make coverage-report
     - mv coverage/ public/
+  cache:
+    <<: *modcache
+    policy: pull
   artifacts:
     paths:
       - public
@@ -49,19 +77,23 @@ deploy-dev:
   stage: deploy
   script:
     - make dist
+  cache:
+    <<: *modcache
+    policy: pull
   environment:
     name: development
   artifacts:
     paths:
       - dist/*-v*.tar.gz
       - dist/*-v*.zip
-  only:
-    - tags
 
 deploy-prod:
   stage: deploy
   script:
     - make dist
+  cache:
+    <<: *modcache
+    policy: pull
   environment:
     name: production
   artifacts:
