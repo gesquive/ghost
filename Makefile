@@ -17,6 +17,7 @@ INSTALL_PATH := ${GOPATH}/src/${PKG_NAME}
 
 DIST_OS ?= "linux darwin windows"
 DIST_ARCH ?= "amd64 386"
+DIST_ARCHIVE ?= "tar.gz"
 DIST_FILES ?= "LICENSE README.md"
 
 COVER_PATH := coverage
@@ -94,17 +95,17 @@ clean: ## Clean the directory tree
 build-dist: gox
 	gox -verbose \
 	-ldflags "-X main.version=${VERSION} -X main.dirty=${GIT_DIRTY}" \
-	-os="${DIST_OS}" \
-	-arch="${DIST_ARCH}" \
+	-os=${DIST_OS} \
+	-arch=${DIST_ARCH} \
 	-output="${DIST_PATH}/{{.OS}}-{{.Arch}}/{{.Dir}}" .
 
 .PHONY: package-dist
 package-dist: gop
 	gop --delete \
-	--os="${DIST_OS}" \
-	--arch="${DIST_ARCH}" \
-	--archive="tar.gz" \
-	--files="${DIST_FILES}" \
+	--os=${DIST_OS} \
+	--arch=${DIST_ARCH} \
+	--archive=${DIST_ARCHIVE} \
+	--files=${DIST_FILES} \
 	--input="${DIST_PATH}/{{.OS}}-{{.Arch}}/{{.Dir}}" \
 	--output="${DIST_PATH}/{{.Dir}}-${VERSION}-{{.OS}}-{{.Arch}}.{{.Archive}}" .
 
