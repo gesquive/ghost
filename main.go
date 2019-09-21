@@ -10,7 +10,6 @@ import (
 )
 
 var version = "v1.0.3-dev"
-var dirty = ""
 
 var cfgFile string
 
@@ -18,9 +17,7 @@ var displayVersion string
 var showVersion bool
 
 func main() {
-	displayVersion = fmt.Sprintf("ghost %s%s",
-		version,
-		dirty)
+	displayVersion = fmt.Sprintf("ghost %s", version)
 	Execute(displayVersion)
 }
 

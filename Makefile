@@ -1,16 +1,13 @@
 #
 #  Makefile
 #
-#  A kickass golang v1.12.x makefile
-#  v1.0.1
+#  A kickass golang v1.13.x makefile
+#  v1.0.4
 
 GOCC := go
 
 # Program version
-MK_VERSION := $(shell git describe --always --tags)
-
-# Check if there are uncommited changes
-GIT_DIRTY := $(shell test -n "`git status --porcelain`" && echo "+CHANGES" || true)
+MK_VERSION := $(shell git describe --always --tags --dirty)
 
 PKG_NAME := ${REPO_HOST_URL}/${OWNER}/${PROJECT_NAME}
 INSTALL_PATH := ${GOPATH}/src/${PKG_NAME}
@@ -45,7 +42,7 @@ help:
 build: ## Compile the project
 	@echo "building ${OWNER} ${BIN_NAME} ${MK_VERSION}"
 	@echo "GOPATH=${GOPATH}"
-	${GOCC} build -ldflags "-X main.version=${MK_VERSION} -X main.dirty=${GIT_DIRTY}" -o ${BIN_NAME}
+	${GOCC} build -ldflags "-X main.version=${MK_VERSION}" -o ${BIN_NAME}
 
 .PHONY: install
 install: build ## Install the binary
@@ -103,7 +100,7 @@ clean: ## Clean the directory tree
 .PHONY: build-dist
 build-dist: ${GOX}
 	${GOX} -verbose \
-	-ldflags "-X main.version=${MK_VERSION} -X main.dirty=${GIT_DIRTY}" \
+	-ldflags "-X main.version=${MK_VERSION} \
 	-os=${DIST_OS} \
 	-arch=${DIST_ARCH} \
 	-output="${DIST_PATH}/{{.OS}}-{{.Arch}}/{{.Dir}}" .
