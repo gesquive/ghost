@@ -2,12 +2,13 @@
 #  Makefile
 #
 #  A kickass golang v1.13.x makefile
-#  v1.0.4
+#  v1.0.5
 
 GOCC := go
 
 # Program version
 MK_VERSION := $(shell git describe --always --tags --dirty)
+MK_DATE := $(shell date -u +%Y%m%d.%H%M%S)
 
 PKG_NAME := ${REPO_HOST_URL}/${OWNER}/${PROJECT_NAME}
 INSTALL_PATH := ${GOPATH}/src/${PKG_NAME}
@@ -42,7 +43,7 @@ help:
 build: ## Compile the project
 	@echo "building ${OWNER} ${BIN_NAME} ${MK_VERSION}"
 	@echo "GOPATH=${GOPATH}"
-	${GOCC} build -ldflags "-X main.version=${MK_VERSION}" -o ${BIN_NAME}
+	${GOCC} build -ldflags "-X main.buildVersion=${MK_VERSION} -X main.buildDate=${MK_DATE}" -o ${BIN_NAME}
 
 .PHONY: install
 install: build ## Install the binary

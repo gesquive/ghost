@@ -3,13 +3,15 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var version = "v1.0.3-dev"
+var buildVersion = "v1.0.3-dev"
+var buildDate = ""
 
 var cfgFile string
 
@@ -17,7 +19,6 @@ var displayVersion string
 var showVersion bool
 
 func main() {
-	displayVersion = fmt.Sprintf("ghost %s", version)
 	Execute(displayVersion)
 }
 
@@ -78,7 +79,9 @@ func initConfig() {
 
 func preRun(cmd *cobra.Command, args []string) {
 	if showVersion {
-		fmt.Println(displayVersion)
+		fmt.Printf("Build Version: %s\n", buildVersion)
+		fmt.Printf("Build Date:    %s\n", buildDate)
+		fmt.Printf("Go Version:    %s\n", runtime.Version())
 		os.Exit(0)
 	}
 }
