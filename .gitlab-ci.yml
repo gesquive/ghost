@@ -1,4 +1,4 @@
-image: golang:1.12.5
+image: registry.gitlab.com/gesquive/go-builder:latest
 
 variables:
   GOPATH: ${CI_PROJECT_DIR}/vendor/go
@@ -18,13 +18,6 @@ stages:
   - test
   - build
   - deploy
-
-dependencies:
-  stage: deps
-  script:
-    - make gop
-    - make gox
-  cache: *modcache
 
 unit_tests:
   stage: test
