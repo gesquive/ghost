@@ -29,6 +29,7 @@ GOX ?= ${BIN}/gox
 GOP ?= ${BIN}/gop
 
 export SHELL ?= /bin/bash
+export CGO_ENABLED = 0
 
 include make.cfg
 default: test build
@@ -43,7 +44,7 @@ help:
 build: ## Compile the project
 	@echo "building ${OWNER} ${BIN_NAME} ${MK_VERSION}"
 	@echo "GOPATH=${GOPATH}"
-	${GOCC} build -ldflags "-X main.buildVersion=${MK_VERSION} -X main.buildDate=${MK_DATE}" -o ${BIN_NAME}
+	${GOCC} build -a -ldflags "-X main.buildVersion=${MK_VERSION} -X main.buildDate=${MK_DATE}" -o ${BIN_NAME}
 
 .PHONY: install
 install: build ## Install the binary
@@ -63,6 +64,7 @@ path:
 .PHONY: deps
 deps: ## Download project dependencies
 	${GOCC} mod download
+	${GOCC} mod verify
 
 .PHONY: lint
 lint: ${GOLINT} ## Lint the source code
@@ -101,7 +103,7 @@ clean: ## Clean the directory tree
 .PHONY: build-dist
 build-dist: ${GOX}
 	${GOX} -verbose \
-	-ldflags "-X main.version=${MK_VERSION} \
+	-ldflags "-X main.buildVersion=${MK_VERSION} -X main.buildDate=${MK_DATE}" \
 	-os=${DIST_OS} \
 	-arch=${DIST_ARCH} \
 	-output="${DIST_PATH}/{{.OS}}-{{.Arch}}/{{.Dir}}" .
