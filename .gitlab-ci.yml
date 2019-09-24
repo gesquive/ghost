@@ -27,7 +27,7 @@ unit_tests:
     <<: *modcache
     policy: pull
 
-race_detector:
+.race_detector:
   stage: test
   script:
     - make race
