@@ -10,16 +10,18 @@ import (
 	"github.com/spf13/viper"
 )
 
-var buildVersion = "v1.0.4-dev"
-var buildDate = ""
+var (
+	buildVersion = "dev"
+	buildCommit  = ""
+	buildDate    = ""
+)
 
 var cfgFile string
 
-var displayVersion string
 var showVersion bool
 
 func main() {
-	Execute(displayVersion)
+	Execute()
 }
 
 // RootCmd represents the base command when called without any subcommands
@@ -34,10 +36,9 @@ outline of an application`,
 
 // Execute adds all child commands to the root command sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
-func Execute(version string) {
-	displayVersion = version
-	RootCmd.SetHelpTemplate(fmt.Sprintf("%s\nVersion:\n  github.com/gesquive/%s\n",
-		RootCmd.HelpTemplate(), displayVersion))
+func Execute() {
+	RootCmd.SetHelpTemplate(fmt.Sprintf("%s\nVersion:\n  github.com/gesquive/ghost %s\n",
+		RootCmd.HelpTemplate(), buildVersion))
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
@@ -79,9 +80,14 @@ func initConfig() {
 
 func preRun(cmd *cobra.Command, args []string) {
 	if showVersion {
-		fmt.Printf("Build Version: %s\n", buildVersion)
-		fmt.Printf("Build Date:    %s\n", buildDate)
-		fmt.Printf("Go Version:    %s\n", runtime.Version())
+		fmt.Printf("Version:   %s\n", buildVersion)
+		if len(buildCommit) > 6 {
+			fmt.Printf("Commit:    %s\n", buildCommit[:7])
+		}
+		if buildDate != "" {
+			fmt.Printf("BuildDate: %s\n", buildDate)
+		}
+		fmt.Printf("Compiler:  %s\n", runtime.Version())
 		os.Exit(0)
 	}
 }
