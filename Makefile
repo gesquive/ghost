@@ -25,8 +25,7 @@ PKG_LIST := ./...
 
 BIN ?= ${GOPATH}/bin
 GOLINT ?= ${BIN}/golint
-GOX ?= ${BIN}/gox
-GOP ?= ${BIN}/gop
+GORELEASER ?= ${BIN}/goreleaser
 
 export SHELL ?= /bin/bash
 export CGO_ENABLED = 0
@@ -100,42 +99,27 @@ clean: ## Clean the directory tree
 	rm -rf "${DIST_PATH}"
 	rm -f "${COVER_PATH}"
 
-.PHONY: build-dist
-build-dist: ${GOX}
-	${GOX} -verbose \
-	-ldflags "-X main.buildVersion=${MK_VERSION} -X main.buildDate=${MK_DATE}" \
-	-os=${DIST_OS} \
-	-arch=${DIST_ARCH} \
-	-output="${DIST_PATH}/{{.OS}}-{{.Arch}}/{{.Dir}}" .
+.PHONY: local-release
+local-release: ${GORELEASER} ## Cross compile and package to a local disk
+	echo ${GORELEASER}
+	${GORELEASER} release --skip-publish --rm-dist --snapshot
 
-.PHONY: package-dist
-package-dist: ${GOP}
-	${GOP} --delete \
-	--os=${DIST_OS} \
-	--arch=${DIST_ARCH} \
-	--archive=${DIST_ARCHIVE} \
-	--files=${DIST_FILES} \
-	--input="${DIST_PATH}/{{.OS}}-{{.Arch}}/{{.Dir}}" \
-	--output="${DIST_PATH}/{{.Dir}}-${MK_VERSION}-{{.OS}}-{{.Arch}}.{{.Archive}}" .
-
-.PHONY: dist
-dist: build-dist package-dist ## Cross compile and package the full distribution
+.PHONY: release
+release: ${GORELEASER} ## Cross compile and package the full distribution
+	${GORELEASER} release
 
 .PHONY: fmt
 fmt: ## Reformat the source tree with gofmt
 	find . -name '*.go' -not -path './.vendor/*' -exec gofmt -w=true {} ';'
 
 # Install golang dependencies here
-${BIN}:
-	@echo "Making bin"
-	@mkdir -p $@
-${BIN}/%: ${BIN}
+${BIN}/%: 
 	@echo "Installing ${PACKAGE} to ${BIN}"
+	@mkdir -p ${BIN}
 	@tmp=$$(mktemp -d); \
-       env GO111MODULE=off GOPATH=$$tmp GOBIN=${BIN} ${GOCC} get ${PACKAGE} \
+       env GO111MODULE=on GOPATH=$$tmp GOBIN=${BIN} ${GOCC} get ${PACKAGE} \
         || ret=$$?; \
        rm -rf $$tmp ; exit $$ret
 
-${BIN}/golint: PACKAGE=golang.org/x/lint/golint
-${BIN}/gox:    PACKAGE=github.com/mitchellh/gox
-${BIN}/gop:    PACKAGE=github.com/gesquive/gop
+${BIN}/golint:     PACKAGE=golang.org/x/lint/golint
+${BIN}/goreleaser: PACKAGE=github.com/goreleaser/goreleaser
