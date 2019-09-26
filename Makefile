@@ -8,7 +8,7 @@ GOCC := go
 
 # Program version
 MK_VERSION := $(shell git describe --always --tags --dirty)
-MK_DATE := $(shell date -u +%Y%m%d.%H%M%S)
+MK_DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
 PKG_NAME := ${REPO_HOST_URL}/${OWNER}/${PROJECT_NAME}
 INSTALL_PATH := ${GOPATH}/src/${PKG_NAME}

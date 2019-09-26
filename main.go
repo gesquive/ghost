@@ -80,14 +80,16 @@ func initConfig() {
 
 func preRun(cmd *cobra.Command, args []string) {
 	if showVersion {
-		fmt.Printf("Version:   %s\n", buildVersion)
+		fmt.Printf("github.com/gesquive/ghost\n")
+		fmt.Printf(" Version:    %s\n", buildVersion)
 		if len(buildCommit) > 6 {
-			fmt.Printf("Commit:    %s\n", buildCommit[:7])
+			fmt.Printf(" Git Commit: %s\n", buildCommit[:7])
 		}
 		if buildDate != "" {
-			fmt.Printf("BuildDate: %s\n", buildDate)
+			fmt.Printf(" Build Date: %s\n", buildDate)
 		}
-		fmt.Printf("Compiler:  %s\n", runtime.Version())
+		fmt.Printf(" Go Version: %s\n", runtime.Version())
+		fmt.Printf(" OS/Arch:    %s/%s\n", runtime.GOOS, runtime.GOARCH)
 		os.Exit(0)
 	}
 }
