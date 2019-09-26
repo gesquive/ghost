@@ -17,7 +17,7 @@ stages:
   - deps
   - test
   - build
-  - deploy
+  - release
 
 unit_tests:
   stage: test
@@ -53,7 +53,7 @@ build:
     policy: pull
 
 pages:
-  stage: deploy
+  stage: release
   script:
     - make coverage-report
     - mv coverage/ public/
@@ -66,10 +66,10 @@ pages:
   only:
     - master
 
-deploy-dev:
-  stage: deploy
+release-dev:
+  stage: release
   script:
-    - make dist
+    - make local-release
   cache:
     <<: *modcache
     policy: pull
@@ -80,10 +80,10 @@ deploy-dev:
       - dist/*-v*.tar.gz
       - dist/*-v*.zip
 
-deploy-prod:
-  stage: deploy
+release-prod:
+  stage: release
   script:
-    - make dist
+    - make release
   cache:
     <<: *modcache
     policy: pull
