@@ -3,12 +3,18 @@ image: index.docker.io/gesquive/go-builder:latest
 variables:
   GOPATH: ${CI_PROJECT_DIR}/vendor/go
   LOCAL_BIN: bin
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  DOCKER_REPO: gesquive
+  IMAGE_NAME: ghost
 
-.modcache: &modcache
+cache: &global_cache
   key: "$CI_COMMIT_REF_SLUG"
   paths:
     - vendor/go/pkg/mod
     - bin
+    - /var/lib/docker
+    - image
   policy: pull
 
 before_script:
@@ -25,7 +31,7 @@ dependencies:
   script:
     - make deps
   cache:
-    <<: *modcache
+    <<: *global_cache
     policy: pull-push
 
 unit_tests:
@@ -33,14 +39,14 @@ unit_tests:
   script:
     - make test
   cache:
-    <<: *modcache
+    <<: *global_cache
 
 .race_detector:
   stage: test
   script:
     - make race
   cache:
-    <<: *modcache
+    <<: *global_cache
 
 code_coverage:
   stage: test
@@ -48,14 +54,14 @@ code_coverage:
   script:
     - make coverage
   cache:
-    <<: *modcache
+    <<: *global_cache
 
 build:
   stage: build
   script:
     - make
   cache:
-    <<: *modcache
+    <<: *global_cache
 
 pages:
   stage: release
@@ -63,7 +69,7 @@ pages:
     - make coverage-report
     - mv coverage/ public/
   cache:
-    <<: *modcache
+    <<: *global_cache
   artifacts:
     paths:
       - public
@@ -75,7 +81,7 @@ release-dev:
   script:
     - make local-release
   cache:
-    <<: *modcache
+    <<: *global_cache
   environment:
     name: development
   artifacts:
@@ -88,7 +94,7 @@ release-prod:
   script:
     - make release
   cache:
-    <<: *modcache
+    <<: *global_cache
   environment:
     name: production
   artifacts:
@@ -96,5 +102,51 @@ release-prod:
       - dist/*_v*.tar.gz
       - dist/*_v*.zip
   when: manual
+  only:
+    - tags
+
+before_script:
+
+build-docker:
+  image: docker:stable
+  services:
+    - docker:dind
+  stage: build
+  script:
+    - apk update && apk add --no-cache make git
+    - make build-docker
+    - mkdir image || true
+    - docker save ${DOCKER_REPO}/${IMAGE_NAME} > image/${IMAGE_NAME}.tar
+  cache:
+    <<: *global_cache
+    policy: pull-push
+
+release-docker:
+  image: docker:stable
+  services:
+    - docker:dind
+  stage: release
+  script:
+    - apk update && apk add --no-cache make git
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker load -i image/${IMAGE_NAME}.tar
+    - make release-docker
+  cache:
+    <<: *global_cache
+  only:
+    - master
+
+release-docker-version:
+  image: docker:stable
+  services:
+    - docker:dind
+  stage: release
+  script:
+    - apk update && apk add --no-cache make git
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker load -i image/${IMAGE_NAME}.tar
+    - make release-docker-version
+  cache:
+    <<: *global_cache
   only:
     - tags

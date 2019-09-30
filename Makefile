@@ -4,10 +4,14 @@
 #  A kickass golang v1.13.x makefile
 #  v1.0.5
 
+export SHELL ?= /bin/bash
+include make.cfg
+
 GOCC := go
 
 # Program version
 MK_VERSION := $(shell git describe --always --tags --dirty)
+MK_HASH := $(shell git rev-parse --short HEAD)
 MK_DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
 PKG_NAME := ${REPO_HOST_URL}/${OWNER}/${PROJECT_NAME}
@@ -23,14 +27,18 @@ DIST_PATH ?= dist
 INSTALL_PATH ?= "/usr/local/bin"
 PKG_LIST := ./...
 
+IMAGE_NAME := ${REGISTRY_URL}/${OWNER}/${PROJECT_NAME}
+IMAGE_TAG := ${IMAGE_NAME}:${MK_HASH}
+RELEASE_TAG := ${IMAGE_NAME}:${MK_VERSION}
+LATEST_TAG := ${IMAGE_NAME}:latest
+
 BIN ?= ${GOPATH}/bin
 GOLINT ?= ${BIN}/golint
 GORELEASER ?= ${BIN}/goreleaser
+DOCKER ?= docker
 
-export SHELL ?= /bin/bash
 export CGO_ENABLED = 0
 
-include make.cfg
 default: test build
 
 .PHONY: help
@@ -123,3 +131,32 @@ ${BIN}/%:
 
 ${BIN}/golint:     PACKAGE=golang.org/x/lint/golint
 ${BIN}/goreleaser: PACKAGE=github.com/goreleaser/goreleaser
+
+
+.PHONY: build-docker
+build-docker: ## Build the docker image
+	@echo "building ${IMAGE_TAG}"
+	${DOCKER} info
+	${DOCKER} build  --pull -t ${IMAGE_TAG} .
+
+.PHONY: release-docker
+release-docker: ## Tag and release the docker image
+	@echo "release ${IMAGE_TAG}"
+	${DOCKER} push ${IMAGE_TAG}
+
+	@echo "tag and release ${RELEASE_TAG}"
+	${DOCKER} pull ${IMAGE_TAG}
+	${DOCKER} tag ${IMAGE_TAG} ${RELEASE_TAG}
+	${DOCKER} push ${RELEASE_TAG}
+
+	@echo "tag and release ${LATEST_TAG}"
+	${DOCKER} pull ${IMAGE_TAG}
+	${DOCKER} tag ${IMAGE_TAG} ${LATEST_TAG}
+	${DOCKER} push ${LATEST_TAG}
+
+.PHONY: release-docker-version
+release-docker-version: ## Release a versioned docker image
+	@echo "tag and release ${RELEASE_TAG}"
+	${DOCKER} pull ${IMAGE_TAG}
+	${DOCKER} tag ${IMAGE_TAG} ${RELEASE_TAG}
+	${DOCKER} push ${RELEASE_TAG}

@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/gesquive/go-builder:latest AS builder
+FROM index.docker.io/gesquive/go-builder:latest AS builder
 
 COPY . .
 
