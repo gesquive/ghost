@@ -80,8 +80,8 @@ release-dev:
     name: development
   artifacts:
     paths:
-      - dist/*-v*.tar.gz
-      - dist/*-v*.zip
+      - dist/*_v*.tar.gz
+      - dist/*_v*.zip
 
 release-prod:
   stage: release
@@ -93,8 +93,8 @@ release-prod:
     name: production
   artifacts:
     paths:
-      - dist/*-v*.tar.gz
-      - dist/*-v*.zip
+      - dist/*_v*.tar.gz
+      - dist/*_v*.zip
   when: manual
   only:
     - tags
