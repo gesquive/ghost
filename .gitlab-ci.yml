@@ -1,4 +1,4 @@
-image: registry.gitlab.com/gesquive/go-builder:latest
+image: index.docker.io/gesquive/go-builder:latest
 
 variables:
   GOPATH: ${CI_PROJECT_DIR}/vendor/go
@@ -9,6 +9,7 @@ variables:
   paths:
     - vendor/go/pkg/mod
     - bin
+  policy: pull
 
 before_script:
   - make deps
@@ -19,13 +20,20 @@ stages:
   - build
   - release
 
+dependencies:
+  stage: deps
+  script:
+    - make deps
+  cache:
+    <<: *modcache
+    policy: pull-push
+
 unit_tests:
   stage: test
   script:
     - make test
   cache:
     <<: *modcache
-    policy: pull
 
 .race_detector:
   stage: test
@@ -33,7 +41,6 @@ unit_tests:
     - make race
   cache:
     <<: *modcache
-    policy: pull
 
 code_coverage:
   stage: test
@@ -42,7 +49,6 @@ code_coverage:
     - make coverage
   cache:
     <<: *modcache
-    policy: pull
 
 build:
   stage: build
@@ -50,7 +56,6 @@ build:
     - make
   cache:
     <<: *modcache
-    policy: pull
 
 pages:
   stage: release
@@ -59,7 +64,6 @@ pages:
     - mv coverage/ public/
   cache:
     <<: *modcache
-    policy: pull
   artifacts:
     paths:
       - public
@@ -72,7 +76,6 @@ release-dev:
     - make local-release
   cache:
     <<: *modcache
-    policy: pull
   environment:
     name: development
   artifacts:
@@ -86,7 +89,6 @@ release-prod:
     - make release
   cache:
     <<: *modcache
-    policy: pull
   environment:
     name: production
   artifacts:
