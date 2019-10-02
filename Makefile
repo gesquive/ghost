@@ -132,6 +132,7 @@ ${BIN}/%:
 ${BIN}/golint:     PACKAGE=golang.org/x/lint/golint
 ${BIN}/goreleaser: PACKAGE=github.com/goreleaser/goreleaser
 
+# Docker related targets
 
 .PHONY: build-docker
 build-docker: ## Build the docker image
@@ -160,3 +161,12 @@ release-docker-version: ## Release a versioned docker image
 	${DOCKER} pull ${IMAGE_TAG}
 	${DOCKER} tag ${IMAGE_TAG} ${RELEASE_TAG}
 	${DOCKER} push ${RELEASE_TAG}
+
+.PHONY: save-docker-local
+save-docker-local:
+	mkdir -p ${DIST_PATH}
+	${DOCKER} save ${IMAGE_TAG} > ${DIST_PATH}/${PROJECT_NAME}.tar
+
+.PHONY: load-docker-local
+load-docker-local:
+	${DOCKER} load -i ${DIST_PATH}/${PROJECT_NAME}.tar
