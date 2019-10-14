@@ -54,19 +54,31 @@ func init() {
 	RootCmd.PersistentFlags().BoolVar(&showVersion, "version", false,
 		"Display the version number and exit")
 
+	RootCmd.PersistentFlags().BoolP("run-once", "o", false,
+		"Only run once and exit")
+
+	viper.SetEnvPrefix("ghost")
+	viper.AutomaticEnv()
+	viper.BindEnv("config")
+	viper.BindEnv("run-once")
+
+	viper.BindPFlag("config", RootCmd.PersistentFlags().Lookup("config"))
+	viper.BindPFlag("run_once", RootCmd.PersistentFlags().Lookup("run-once"))
+
 }
 
 // initConfig reads in config file and ENV variables if set.
 func initConfig() {
+	cfgFile := viper.GetString("config")
 	if cfgFile != "" { // enable ability to specify config file via flag
 		viper.SetConfigFile(cfgFile)
+	} else {
+		viper.SetConfigName("config")              // name of config file (without extension)
+		viper.AddConfigPath(".")                   // add current directory as first search path
+		viper.AddConfigPath("$HOME/.config/ghost") // add home directory to search path
+		viper.AddConfigPath("/etc/ghost")          // add etc to search path
+		viper.AutomaticEnv()                       // read in environment variables that match
 	}
-
-	viper.SetConfigName("config")              // name of config file (without extension)
-	viper.AddConfigPath(".")                   // add current directory as first search path
-	viper.AddConfigPath("$HOME/.config/ghost") // add home directory to search path
-	viper.AddConfigPath("/etc/ghost")          // add etc to search path
-	viper.AutomaticEnv()                       // read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err != nil {
@@ -96,5 +108,9 @@ func preRun(cmd *cobra.Command, args []string) {
 
 func run(cmd *cobra.Command, args []string) {
 	var g ghost
-	fmt.Println(g.show(), g.say())
+	if viper.GetBool("run_once") {
+		g.Boo()
+	} else {
+		g.Hunt(15)
+	}
 }
