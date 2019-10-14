@@ -3,7 +3,6 @@ image: index.docker.io/gesquive/go-builder:latest
 variables:
   GOPATH: ${CI_PROJECT_DIR}/vendor/go
   LOCAL_BIN: bin
-  DOCKER_HOST: tcp://docker:2375
   DOCKER_DRIVER: overlay2
 
 cache: &global_cache
@@ -23,6 +22,8 @@ stages:
   - test
   - build
   - release
+  - build-docker
+  - release-docker
 
 dependencies:
   stage: deps
@@ -74,12 +75,13 @@ pages:
   only:
     - master
 
-release-dev:
+release:
   stage: release
   script:
     - make local-release
   cache:
     <<: *global_cache
+    policy: pull-push
   environment:
     name: development
   artifacts:
@@ -87,12 +89,13 @@ release-dev:
       - dist/*_v*.tar.gz
       - dist/*_v*.zip
 
-release-prod:
+release-version:
   stage: release
   script:
     - make release
   cache:
     <<: *global_cache
+    policy: pull-push
   environment:
     name: production
   artifacts:
@@ -103,7 +106,54 @@ release-prod:
   only:
     - tags
 
-build-docker:
+.build-docker-arch:
+  image: docker:stable
+  services:
+    - docker:dind
+  stage: build-docker
+  cache:
+    <<: *global_cache
+  before_script:
+    - apk --update add --no-cache make git
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+build-docker-amd64:
+  extends: .build-docker-arch
+  script:
+    - make release-docker-amd64
+
+build-docker-arm32v6:
+  extends: .build-docker-arch
+  tags: [linux, arm32v6]
+  script:
+    - make release-docker-arm32v6
+
+build-docker-arm32v7:
+  extends: .build-docker-arch
+  tags: [linux, arm32v7]
+  script:
+    - make release-docker-arm32v7
+
+build-docker-arm64v8:
+  extends: .build-docker-arch
+  tags: [linux, arm64v8]
+  script:
+    - make release-docker-arm64v8
+
+release-docker:
+  image: docker.io/gesquive/master-builder
+  services:
+    - docker:dind
+  stage: release-docker
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker info
+    - make release-docker
+  only:
+    - master
+
+.build-docker:
   image: docker:stable
   services:
     - docker:dind
@@ -119,23 +169,7 @@ build-docker:
     <<: *global_cache
     policy: pull-push
 
-release-docker:
-  image: docker:stable
-  services:
-    - docker:dind
-  stage: release
-  before_script:
-    - apk update && apk add --no-cache make git
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - make load-docker-local
-    - make release-docker
-  cache:
-    <<: *global_cache
-  only:
-    - master
-
-release-docker-version:
+.release-docker-version:
   image: docker:stable
   services:
     - docker:dind

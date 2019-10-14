@@ -2,12 +2,11 @@ FROM index.docker.io/gesquive/go-builder:latest AS builder
 
 ENV RUN_APP=ghost
 
-ARG os="linux"
-ARG arch="amd64"
+ARG os_arch="linux_amd64"
 
 COPY . .
 
-COPY dist/${RUN_APP}_${os}_${arch}/${RUN_APP} /app/
+COPY dist/${RUN_APP}_${os_arch}/${RUN_APP} /app/
 
 FROM scratch
 LABEL maintainer="Gus Esquivel <gesquive@gmail.com>"

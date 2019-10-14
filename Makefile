@@ -27,10 +27,8 @@ DIST_PATH ?= dist
 INSTALL_PATH ?= "/usr/local/bin"
 PKG_LIST := ./...
 
-IMAGE_NAME := ${REGISTRY_URL}/${OWNER}/${PROJECT_NAME}
-IMAGE_TAG := ${IMAGE_NAME}:${MK_HASH}
-RELEASE_TAG := ${IMAGE_NAME}:${MK_VERSION}
-LATEST_TAG := ${IMAGE_NAME}:latest
+IMAGE := ${REGISTRY_URL}/${OWNER}/${PROJECT_NAME}
+DK_VERSION = $(shell git describe --always --tags | sed 's/^v//' | sed 's/-g/-/')
 
 BIN ?= ${GOPATH}/bin
 GOLINT ?= ${BIN}/golint
@@ -38,6 +36,7 @@ GORELEASER ?= ${BIN}/goreleaser
 DOCKER ?= docker
 
 export CGO_ENABLED = 0
+export DOCKER_CLI_EXPERIMENTAL = enabled
 
 default: test build
 
@@ -133,40 +132,44 @@ ${BIN}/golint:     PACKAGE=golang.org/x/lint/golint
 ${BIN}/goreleaser: PACKAGE=github.com/goreleaser/goreleaser
 
 # Docker related targets
-
 .PHONY: build-docker
 build-docker: ## Build the docker image
-	@echo "building ${IMAGE_TAG}"
+	@echo "building ${MK_VERSION}"
 	${DOCKER} info
-	${DOCKER} build  --pull -t ${IMAGE_TAG} .
+	${DOCKER} build  --pull -t ${IMAGE}:${MK_VERSION} .
+
+release-docker-%:
+	@echo "building '${DK_TAG}' docker image"
+	${DOCKER} build --build-arg os_arch="${DK_OS_ARCH}" --pull -t ${IMAGE}:${DK_TAG} .
+	${DOCKER} push ${IMAGE}:${DK_TAG}
+
+release-docker-amd64: DK_TAG=${DK_VERSION}-amd64
+release-docker-amd64: DK_OS_ARCH=linux_amd64
+
+release-docker-arm32v6: DK_TAG=${DK_VERSION}-arm32v6
+release-docker-arm32v6: DK_OS_ARCH=linux_arm_6
+
+release-docker-arm32v7: DK_TAG=${DK_VERSION}-arm32v7
+release-docker-arm32v7: DK_OS_ARCH=linux_arm_7
+
+release-docker-arm64v8: DK_TAG=${DK_VERSION}-arm64v8
+release-docker-arm64v8: DK_OS_ARCH=linux_arm64
 
 .PHONY: release-docker
-release-docker: ## Tag and release the docker image
-	@echo "release ${IMAGE_TAG}"
-	${DOCKER} push ${IMAGE_TAG}
+release-docker:  ## build and push all of docker images
+	@echo "building docker manifest"
+	${DOCKER} manifest create ${IMAGE}:${DK_VERSION} ${IMAGE}:${DK_VERSION}-amd64 ${IMAGE}:${DK_VERSION}-arm32v7 ${IMAGE}:${DK_VERSION}-arm64v8
+	${DOCKER} manifest annotate ${IMAGE}:${DK_VERSION} ${IMAGE}:${DK_VERSION}-arm32v7 --os linux --arch arm --variant v7
+	${DOCKER} manifest annotate ${IMAGE}:${DK_VERSION} ${IMAGE}:${DK_VERSION}-arm64v8 --os linux --arch arm64 --variant v8
+	${DOCKER} manifest push ${IMAGE}:${DK_VERSION}
 
-	@echo "tag and release ${RELEASE_TAG}"
-	${DOCKER} pull ${IMAGE_TAG}
-	${DOCKER} tag ${IMAGE_TAG} ${RELEASE_TAG}
-	${DOCKER} push ${RELEASE_TAG}
+	${DOCKER} manifest create ${IMAGE}:latest ${IMAGE}:${DK_VERSION}-amd64 ${IMAGE}:${DK_VERSION}-arm32v6 ${IMAGE}:${DK_VERSION}-arm32v7 ${IMAGE}:${DK_VERSION}-arm64v8
+	${DOCKER} manifest annotate ${IMAGE}:latest ${IMAGE}:${DK_VERSION}-arm32v6 --os linux --arch arm --variant v6
+	${DOCKER} manifest annotate ${IMAGE}:latest ${IMAGE}:${DK_VERSION}-arm32v7 --os linux --arch arm --variant v7
+	${DOCKER} manifest annotate ${IMAGE}:latest ${IMAGE}:${DK_VERSION}-arm64v8 --os linux --arch arm64 --variant v8
+	${DOCKER} manifest push ${IMAGE}:latest
 
-	@echo "tag and release ${LATEST_TAG}"
-	${DOCKER} pull ${IMAGE_TAG}
-	${DOCKER} tag ${IMAGE_TAG} ${LATEST_TAG}
-	${DOCKER} push ${LATEST_TAG}
 
-.PHONY: release-docker-version
-release-docker-version: ## Release a versioned docker image
-	@echo "tag and release ${RELEASE_TAG}"
-	${DOCKER} pull ${IMAGE_TAG}
-	${DOCKER} tag ${IMAGE_TAG} ${RELEASE_TAG}
-	${DOCKER} push ${RELEASE_TAG}
-
-.PHONY: save-docker-local
-save-docker-local:
-	mkdir -p ${DIST_PATH}
-	${DOCKER} save ${IMAGE_TAG} > ${DIST_PATH}/${PROJECT_NAME}.tar
-
-.PHONY: load-docker-local
-load-docker-local:
-	${DOCKER} load -i ${DIST_PATH}/${PROJECT_NAME}.tar
+# build manifest for git describe
+# manifest version is "1.2.3-g23ab3df"
+# image version is "1.2.3-g23ab3df-amd64"
