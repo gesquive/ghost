@@ -1,9 +1,11 @@
 FROM index.docker.io/gesquive/go-builder:latest AS builder
 
+ARG opts="GOOS=linux GOARCH=amd64"
+
 COPY . .
 
 RUN make deps
-RUN GOOS=linux GOARCH=amd64 make build
+RUN env ${opts} make build
 
 FROM scratch
 LABEL maintainer="Gus Esquivel <gesquive@gmail.com>"
