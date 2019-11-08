@@ -138,38 +138,14 @@ build-docker: ## Build the docker image
 	${DOCKER} info
 	${DOCKER} build  --pull -t ${IMAGE}:${MK_VERSION} .
 
-release-docker-%:
-	@echo "building '${DK_TAG}' docker image"
-	${DOCKER} build --build-arg os_arch="${DK_OS_ARCH}" --pull -t ${IMAGE}:${DK_TAG} .
-	${DOCKER} push ${IMAGE}:${DK_TAG}
-
-release-docker-amd64: DK_TAG=${DK_VERSION}-amd64
-release-docker-amd64: DK_OS_ARCH=linux_amd64
-
-release-docker-arm32v6: DK_TAG=${DK_VERSION}-arm32v6
-release-docker-arm32v6: DK_OS_ARCH=linux_arm_6
-
-release-docker-arm32v7: DK_TAG=${DK_VERSION}-arm32v7
-release-docker-arm32v7: DK_OS_ARCH=linux_arm_7
-
-release-docker-arm64v8: DK_TAG=${DK_VERSION}-arm64v8
-release-docker-arm64v8: DK_OS_ARCH=linux_arm64
-
-.PHONY: release-docker
-release-docker:  ## build and push all of docker images
-	@echo "building docker manifest"
-	${DOCKER} manifest create ${IMAGE}:${DK_VERSION} ${IMAGE}:${DK_VERSION}-amd64 ${IMAGE}:${DK_VERSION}-arm32v7 ${IMAGE}:${DK_VERSION}-arm64v8
-	${DOCKER} manifest annotate ${IMAGE}:${DK_VERSION} ${IMAGE}:${DK_VERSION}-arm32v7 --os linux --arch arm --variant v7
-	${DOCKER} manifest annotate ${IMAGE}:${DK_VERSION} ${IMAGE}:${DK_VERSION}-arm64v8 --os linux --arch arm64 --variant v8
-	${DOCKER} manifest push ${IMAGE}:${DK_VERSION}
-
-	${DOCKER} manifest create ${IMAGE}:latest ${IMAGE}:${DK_VERSION}-amd64 ${IMAGE}:${DK_VERSION}-arm32v6 ${IMAGE}:${DK_VERSION}-arm32v7 ${IMAGE}:${DK_VERSION}-arm64v8
-	${DOCKER} manifest annotate ${IMAGE}:latest ${IMAGE}:${DK_VERSION}-arm32v6 --os linux --arch arm --variant v6
-	${DOCKER} manifest annotate ${IMAGE}:latest ${IMAGE}:${DK_VERSION}-arm32v7 --os linux --arch arm --variant v7
-	${DOCKER} manifest annotate ${IMAGE}:latest ${IMAGE}:${DK_VERSION}-arm64v8 --os linux --arch arm64 --variant v8
-	${DOCKER} manifest push ${IMAGE}:latest
-
-
 # build manifest for git describe
 # manifest version is "1.2.3-g23ab3df"
 # image version is "1.2.3-g23ab3df-amd64"
+
+.PHONY: release-docker
+release-docker:
+	@echo "building multi-arch docker ${DK_VERSION}"
+	${DOCKER} buildx create --driver docker-container --use
+	${DOCKER} buildx inspect --bootstrap
+	${DOCKER} buildx ls
+	${DOCKER} buildx build --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64 --pull -t ${IMAGE}:${DK_VERSION} -t ${IMAGE}:latest --push .

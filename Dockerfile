@@ -1,12 +1,12 @@
 FROM index.docker.io/gesquive/go-builder:latest AS builder
 
-ENV RUN_APP=ghost
+ENV APP=ghost
+ARG TARGETARCH
+ARG TARGETOS
+ARG TARGETVARIANT
 
-ARG os_arch="linux_amd64"
-
-COPY . .
-
-COPY dist/${RUN_APP}_${os_arch}/${RUN_APP} /app/
+COPY dist/ /dist/
+RUN copy-release
 
 FROM scratch
 LABEL maintainer="Gus Esquivel <gesquive@gmail.com>"
@@ -16,7 +16,7 @@ COPY --from=builder /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /etc/passwd /etc/passwd
 
-COPY --from=builder /app/${RUN_APP} /app/
+COPY --from=builder /app/${APP} /app/
 
 # Use an unprivileged user
 USER runuser

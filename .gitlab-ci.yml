@@ -27,6 +27,7 @@ stages:
 
 dependencies:
   stage: deps
+  tags: [linux, docker]
   script:
     - make deps
   cache:
@@ -79,6 +80,7 @@ release:
   stage: release
   script:
     - make local-release
+  tags: [linux, docker]
   cache:
     <<: *global_cache
     policy: pull-push
@@ -106,81 +108,22 @@ release-version:
   only:
     - tags
 
-.build-docker-arch:
-  image: docker:stable
-  services:
-    - docker:dind
-  stage: build-docker
-  cache:
-    <<: *global_cache
-  before_script:
-    - apk --update add --no-cache make git
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-
-build-docker-amd64:
-  extends: .build-docker-arch
-  script:
-    - make release-docker-amd64
-
-build-docker-arm32v6:
-  extends: .build-docker-arch
-  tags: [linux, arm32v6]
-  script:
-    - make release-docker-arm32v6
-
-build-docker-arm32v7:
-  extends: .build-docker-arch
-  tags: [linux, arm32v7]
-  script:
-    - make release-docker-arm32v7
-
-build-docker-arm64v8:
-  extends: .build-docker-arch
-  tags: [linux, arm64v8]
-  script:
-    - make release-docker-arm64v8
-
 release-docker:
   image: docker.io/gesquive/master-builder
   services:
     - docker:dind
+  tags: [linux, docker]
   stage: release-docker
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  cache:
+    <<: *global_cache
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
     - docker info
+  script:
+    - qemu-register.sh --reset -p yes
     - make release-docker
   only:
     - master
-
-.build-docker:
-  image: docker:stable
-  services:
-    - docker:dind
-  stage: build
-  before_script:
-    - apk update && apk add --no-cache make git
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - apk update && apk add --no-cache make git
-    - make build-docker
-    - make save-docker-local
-  cache:
-    <<: *global_cache
-    policy: pull-push
-
-.release-docker-version:
-  image: docker:stable
-  services:
-    - docker:dind
-  stage: release
-  before_script:
-    - apk update && apk add --no-cache make git
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - make load-docker-local
-    - make release-docker-version
-  cache:
-    <<: *global_cache
-  only:
-    - tags
