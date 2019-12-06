@@ -15,13 +15,14 @@ MK_HASH := $(shell git rev-parse --short HEAD)
 MK_DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 
 PKG_NAME := ${REPO_HOST_URL}/${OWNER}/${PROJECT_NAME}
-INSTALL_PATH := ${GOPATH}/src/${PKG_NAME}
+PKG_PATH := ${GOPATH}/src/${PKG_NAME}
+PKG_LIST := ./...
 
 COVER_PATH := coverage
 DIST_PATH ?= dist
-PKG_LIST := ./...
+INSTALL_PATH ?= /usr/local/bin/
 
-IMAGE := ${REGISTRY_URL}/${OWNER}/${PROJECT_NAME}
+DK_NAME := ${REGISTRY_URL}/${OWNER}/${PROJECT_NAME}
 DK_VERSION = $(shell git describe --always --tags | sed 's/^v//' | sed 's/-g/-/')
 DK_PLATFORMS = "linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64"
 
@@ -49,18 +50,18 @@ build: ## Compile the project
 
 .PHONY: install
 install: build ## Install the binary
-	install -d ${DESTDIR}
-	install -m 755 ./${BIN_NAME} ${DESTDIR}/${BIN_NAME}
+	install -d ${INSTALL_PATH}
+	install -m 755 ./${BIN_NAME} ${INSTALL_PATH}/${BIN_NAME}
 
 .PHONY: link
-link: $(INSTALL_PATH) ## Symlink this project into the GOPATH
-$(INSTALL_PATH):
-	@mkdir -p `dirname $(INSTALL_PATH)`
-	@ln -s $(PWD) $(INSTALL_PATH) >/dev/null 2>&1
+link: $(PKG_PATH) ## Symlink this project into the GOPATH
+$(PKG_PATH):
+	@mkdir -p `dirname $(PKG_PATH)`
+	@ln -s $(PWD) $(PKG_PATH) >/dev/null 2>&1
 
 .PHONY: path # Returns the project path
 path:
-	@echo $(INSTALL_PATH)
+	@echo $(PKG_PATH)
 
 .PHONY: deps
 deps: ## Download project dependencies
@@ -131,7 +132,7 @@ ${BIN}/goreleaser: PACKAGE=github.com/goreleaser/goreleaser
 build-docker: ## Build the docker image
 	@echo "building ${MK_VERSION}"
 	${DOCKER} info
-	${DOCKER} build  --pull -t ${IMAGE}:${MK_VERSION} .
+	${DOCKER} build  --pull -t ${DK_NAME}:${MK_VERSION} .
 
 # build manifest for git describe
 # manifest version is "1.2.3-g23ab3df"
@@ -145,9 +146,9 @@ release-docker: ## Build a multi-arch docker manifest and images
 	${DOCKER} buildx ls
 	git describe --exact-match >/dev/null 2>&1;\
 	if [ $$? == 0 ]; then \
-	  ${DOCKER} buildx build --platform ${DK_PLATFORMS} --pull -t ${IMAGE}:${DK_VERSION} -t ${IMAGE}:latest --push . ; \
+	  ${DOCKER} buildx build --platform ${DK_PLATFORMS} --pull -t ${DK_NAME}:${DK_VERSION} -t ${DK_NAME}:latest --push . ; \
 	  else \
-	  ${DOCKER} buildx build --platform ${DK_PLATFORMS} --pull -t ${IMAGE}:${DK_VERSION} --push . ; \
+	  ${DOCKER} buildx build --platform ${DK_PLATFORMS} --pull -t ${DK_NAME}:${DK_VERSION} --push . ; \
 	  fi
 
 dev:
