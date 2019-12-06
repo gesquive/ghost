@@ -17,18 +17,13 @@ MK_DATE := $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
 PKG_NAME := ${REPO_HOST_URL}/${OWNER}/${PROJECT_NAME}
 INSTALL_PATH := ${GOPATH}/src/${PKG_NAME}
 
-DIST_OS ?= "linux darwin windows"
-DIST_ARCH ?= "amd64 386"
-DIST_ARCHIVE ?= "tar.gz"
-DIST_FILES ?= "LICENSE README.md"
-
 COVER_PATH := coverage
 DIST_PATH ?= dist
-INSTALL_PATH ?= "/usr/local/bin"
 PKG_LIST := ./...
 
 IMAGE := ${REGISTRY_URL}/${OWNER}/${PROJECT_NAME}
 DK_VERSION = $(shell git describe --always --tags | sed 's/^v//' | sed 's/-g/-/')
+DK_PLATFORMS = "linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64"
 
 BIN ?= ${GOPATH}/bin
 GOLINT ?= ${BIN}/golint
@@ -107,7 +102,7 @@ clean: ## Clean the directory tree
 	rm -f "${COVER_PATH}"
 
 .PHONY: local-release
-local-release: ${GORELEASER} ## Cross compile and package to a local disk
+local-release: ${GORELEASER} ## Cross compile and package to local disk
 	echo ${GORELEASER}
 	${GORELEASER} release --skip-publish --rm-dist --snapshot
 
@@ -143,9 +138,21 @@ build-docker: ## Build the docker image
 # image version is "1.2.3-g23ab3df-amd64"
 
 .PHONY: release-docker
-release-docker:
+release-docker: ## Build a multi-arch docker manifest and images
 	@echo "building multi-arch docker ${DK_VERSION}"
 	${DOCKER} buildx create --driver docker-container --use
 	${DOCKER} buildx inspect --bootstrap
 	${DOCKER} buildx ls
-	${DOCKER} buildx build --platform linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64 --pull -t ${IMAGE}:${DK_VERSION} -t ${IMAGE}:latest --push .
+	git describe --exact-match >/dev/null 2>&1;\
+	if [ $$? == 0 ]; then \
+	  ${DOCKER} buildx build --platform ${DK_PLATFORMS} --pull -t ${IMAGE}:${DK_VERSION} -t ${IMAGE}:latest --push . ; \
+	  else \
+	  ${DOCKER} buildx build --platform ${DK_PLATFORMS} --pull -t ${IMAGE}:${DK_VERSION} --push . ; \
+	  fi
+
+dev:
+	git describe --exact-match >/dev/null 2>&1;\
+	  if [ $$? == 0 ]; then \
+	  echo "latest"; \
+	  else echo "dev"; \
+	  fi
