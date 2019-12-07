@@ -22,7 +22,6 @@ stages:
   - test
   - build
   - release
-  - build-docker
   - release-docker
 
 dependencies:
@@ -79,22 +78,8 @@ pages:
 release:
   stage: release
   script:
-    - make local-release
-  tags: [linux, docker]
-  cache:
-    <<: *global_cache
-    policy: pull-push
-  environment:
-    name: development
-  artifacts:
-    paths:
-      - dist/*_v*.tar.gz
-      - dist/*_v*.zip
-
-release-version:
-  stage: release
-  script:
     - make release
+  tags: [linux, docker]
   cache:
     <<: *global_cache
     policy: pull-push
@@ -104,9 +89,6 @@ release-version:
     paths:
       - dist/*_v*.tar.gz
       - dist/*_v*.zip
-  when: manual
-  only:
-    - tags
 
 release-docker:
   image: docker.io/gesquive/master-builder
