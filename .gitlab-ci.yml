@@ -75,22 +75,37 @@ pages:
   only:
     - master
 
-release:
+.release:
   stage: release
-  script:
-    - make release
   tags: [linux, docker]
   cache:
     <<: *global_cache
     policy: pull-push
-  environment:
-    name: production
   artifacts:
     paths:
       - dist/*_v*.tar.gz
       - dist/*_v*.zip
 
-release-docker:
+release-snapshot:
+  extends: .release
+  script:
+    - make release-snapshot
+  environment:
+    name: development
+  except:
+    - tags
+
+release-build:
+  extends: .release
+  script:
+    - make release
+  environment:
+    name: production
+  only:
+    - tags
+
+
+.release-docker:
   image: docker.io/gesquive/master-builder
   services:
     - docker:dind
@@ -104,8 +119,24 @@ release-docker:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - docker info
-  script:
     - qemu-register.sh --reset -p yes
-    - make release-docker
   only:
     - master
+
+release-docker-snapshot:
+  extends: .release-docker
+  script:
+    - make release-docker-snapshot
+  environment:
+    name: development
+  except:
+    - tags
+
+release-docker-build:
+  extends: .release-docker
+  script:
+    - make release-docker
+  environment:
+    name: production
+  only:
+    - tags

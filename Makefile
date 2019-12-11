@@ -24,7 +24,7 @@ INSTALL_PATH ?= /usr/local/bin/
 
 DK_NAME := ${REGISTRY_URL}/${OWNER}/${PROJECT_NAME}
 DK_VERSION = $(shell git describe --always --tags | sed 's/^v//' | sed 's/-g/-/')
-DK_PLATFORMS = "linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64"
+DK_PLATFORMS = linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
 
 BIN ?= ${GOPATH}/bin
 GOLINT ?= ${BIN}/golint
@@ -102,9 +102,8 @@ clean: ## Clean the directory tree
 	rm -rf "${DIST_PATH}"
 	rm -f "${COVER_PATH}"
 
-.PHONY: local-release
-local-release: ${GORELEASER} ## Cross compile and package to local disk
-	echo ${GORELEASER}
+.PHONY: release-snapshot
+release-snapshot: ${GORELEASER} ## Cross compile and package to local disk
 	${GORELEASER} release --skip-publish --rm-dist --snapshot
 
 .PHONY: release
@@ -138,22 +137,18 @@ build-docker: ## Build the docker image
 # manifest version is "1.2.3-g23ab3df"
 # image version is "1.2.3-g23ab3df-amd64"
 
-.PHONY: release-docker
-release-docker: ## Build a multi-arch docker manifest and images
-	@echo "building multi-arch docker ${DK_VERSION}"
-	${DOCKER} buildx create --driver docker-container --use
+.PHONY: init-docker-build
+init-docker-build:
+	${DOCKER} buildx create --driver docker-container --name gobuild --use
 	${DOCKER} buildx inspect --bootstrap
 	${DOCKER} buildx ls
-	git describe --exact-match >/dev/null 2>&1;\
-	if [ $$? == 0 ]; then \
-	  ${DOCKER} buildx build --platform ${DK_PLATFORMS} --pull -t ${DK_NAME}:${DK_VERSION} -t ${DK_NAME}:latest --push . ; \
-	  else \
-	  ${DOCKER} buildx build --platform ${DK_PLATFORMS} --pull -t ${DK_NAME}:${DK_VERSION} --push . ; \
-	  fi
 
-dev:
-	git describe --exact-match >/dev/null 2>&1;\
-	  if [ $$? == 0 ]; then \
-	  echo "latest"; \
-	  else echo "dev"; \
-	  fi
+.PHONY: release-docker-snapshot
+release-docker-snapshot: init-docker-build
+	@echo "building multi-arch docker ${DK_VERSION}"
+	${DOCKER} buildx build --platform ${DK_PLATFORMS} --pull -t ${DK_NAME}:${DK_VERSION} --push .
+
+.PHONY: release-docker
+release-docker: init-docker-build ## Build a multi-arch docker manifest and images
+	@echo "building multi-arch docker ${DK_VERSION}"
+	${DOCKER} buildx build --platform ${DK_PLATFORMS} --pull -t ${DK_NAME}:${DK_VERSION} -t ${DK_NAME}:latest --push .
