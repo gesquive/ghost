@@ -3,7 +3,6 @@ image: index.docker.io/gesquive/go-builder:latest
 variables:
   GOPATH: ${CI_PROJECT_DIR}/vendor/go
   LOCAL_BIN: bin
-  DOCKER_DRIVER: overlay2
 
 cache: &global_cache
   key: "$CI_COMMIT_REF_SLUG"
@@ -103,7 +102,6 @@ release-build:
     name: production
   only:
     - tags
-
 
 .release-docker:
   image: docker.io/gesquive/master-builder

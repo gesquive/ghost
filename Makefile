@@ -24,7 +24,7 @@ INSTALL_PATH ?= /usr/local/bin/
 
 DK_NAME := ${REGISTRY_URL}/${OWNER}/${PROJECT_NAME}
 DK_VERSION = $(shell git describe --always --tags | sed 's/^v//' | sed 's/-g/-/')
-DK_PLATFORMS = linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
+DK_PLATFORMS = linux/amd64,linux/arm/v7,linux/arm64
 
 BIN ?= ${GOPATH}/bin
 GOLINT ?= ${BIN}/golint
@@ -131,7 +131,7 @@ ${BIN}/goreleaser: PACKAGE=github.com/goreleaser/goreleaser
 build-docker: ## Build the docker image
 	@echo "building ${MK_VERSION}"
 	${DOCKER} info
-	${DOCKER} build  --pull -t ${DK_NAME}:${MK_VERSION} .
+	${DOCKER} build --pull -t ${DK_NAME}:${MK_VERSION} .
 
 # build manifest for git describe
 # manifest version is "1.2.3-g23ab3df"
