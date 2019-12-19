@@ -66,3 +66,37 @@ release:
   # You can change the name of the GitHub release.
   name_template: "{{.Tag}}"
   
+brews:
+  -
+    # Github repository to push the tap to.
+    github:
+      owner: gesquive
+      name: homebrew-tap
+
+    # Git author used to commit to the repository.
+    # Defaults are shown.
+    commit_author:
+      name: releasebot
+      email: gesquive@gmail.com
+
+    # Folder inside the repository to put the formula.
+    # Default is the root folder.
+    folder: Formula
+
+    # Caveats for the user of your binary.
+    # Default is empty.
+    caveats: ""
+
+    # Your app's homepage.
+    # Default is empty.
+    homepage: "https://github.com/gesquive/ghost"
+
+    # Your app's description.
+    # Default is empty.
+    description: "Nothing to see here"
+
+    # Packages your package depends on.
+    dependencies: []
+
+    # Packages that conflict with your package.
+    conflicts: []
