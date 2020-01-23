@@ -2,7 +2,7 @@
 #  Makefile
 #
 #  A kickass golang v1.13.x makefile
-#  v1.0.6
+#  v1.13.6
 
 export SHELL ?= /bin/bash
 include make.cfg
@@ -152,4 +152,4 @@ release-docker-snapshot: init-docker-build
 .PHONY: release-docker
 release-docker: init-docker-build ## Build a multi-arch docker manifest and images
 	@echo "building multi-arch docker ${DK_VERSION}"
-	${DOCKER} buildx build -f ${DK_PATH}--platform ${DK_PLATFORMS} --pull -t ${DK_NAME}:${DK_VERSION} -t ${DK_NAME}:latest --push .
+	${DOCKER} buildx build -f ${DK_PATH} --platform ${DK_PLATFORMS} --pull -t ${DK_NAME}:${DK_VERSION} -t ${DK_NAME}:latest --push .

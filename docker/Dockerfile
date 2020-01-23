@@ -20,7 +20,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 # Import the user/group files from builder
 COPY --from=builder /etc/passwd /etc/passwd
-COPY --from=builder /etc/passwd /etc/group
+COPY --from=builder /etc/group /etc/group
 
 COPY --from=builder /app/${APP} /app/
 COPY --from=builder /etc/${APP} /etc/
