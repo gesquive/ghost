@@ -27,5 +27,8 @@ COPY --from=builder /etc/${APP} /etc/
 
 # Use an unprivileged user
 USER runner:runner
+WORKDIR /config
+
+VOLUME /config
 
 ENTRYPOINT ["/app/ghost"]

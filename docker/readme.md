@@ -40,7 +40,7 @@ docker
 docker create \
   --name=ghost \
   -p 8080:8080 \
-  -v path/to/config:/etc/ghost \
+  -v path/to/config:/config \
   --restart unless-stopped \
   gesquive/ghost
 ```
@@ -56,7 +56,7 @@ services:
     image: gesquive/ghost
     container_name: ghost
     volumes:
-      - path/to/config:/etc/ghost
+      - path/to/config:/config
     ports:
       - 8080:8080
     restart: unless-stopped
@@ -66,5 +66,5 @@ The container defines the following parameters that you can set:
 
 | Parameter | Function |
 | --------- | -------- |
-| `-p 8080`        | The port for the ghost REST API |
-| `-v /etc/ghost`  | The ghost config goes here |
+| `-p 8080`      | The port for the ghost REST API |
+| `-v /configt`  | The ghost config goes here |
