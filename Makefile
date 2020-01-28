@@ -2,7 +2,7 @@
 #  Makefile
 #
 #  A kickass golang v1.13.x makefile
-#  v1.13.6
+#  v1.13.7
 
 export SHELL ?= /bin/bash
 include make.cfg
@@ -24,8 +24,8 @@ INSTALL_PATH ?= /usr/local/bin/
 
 DK_NAME := ${REGISTRY_URL}/${OWNER}/${PROJECT_NAME}
 DK_VERSION = $(shell git describe --always --tags | sed 's/^v//' | sed 's/-g/-/')
-DK_PLATFORMS = linux/amd64,linux/arm/v7,linux/arm64
-DK_PATH = docker/Dockerfile
+DK_PLATFORMS ?= linux/amd64,linux/arm/v7,linux/arm64
+DK_PATH ?= docker/Dockerfile
 
 BIN ?= ${GOPATH}/bin
 GOLINT ?= ${BIN}/golint
