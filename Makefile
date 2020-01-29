@@ -109,7 +109,7 @@ release-snapshot: ${GORELEASER} ## Cross compile and package to local disk
 
 .PHONY: release
 release: ${GORELEASER} ## Cross compile and package the full distribution
-	${GORELEASER} release
+	${GORELEASER} release --rm-dist
 
 .PHONY: fmt
 fmt: ## Reformat the source tree with gofmt
