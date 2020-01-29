@@ -31,7 +31,8 @@ snapshot:
   name_template: "{{.Tag}}+{{.ShortCommit}}"
 
 archives:
-- replacements:
+- name_template: "{{ .ProjectName }}_v{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+  replacements:
     386: i386
     amd64: x86_64
   format_overrides:
