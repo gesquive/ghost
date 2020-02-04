@@ -3,11 +3,13 @@ vendor/*
 dist/
 scripts/
 
+
 *.bak
 *.log
 
 config*.yml
 !docker/config.yml
+!.circleci/config.yml
 
 ghost
 
