@@ -140,7 +140,8 @@ build-docker: ## Build the docker image
 
 .PHONY: init-docker-build
 init-docker-build:
-	${DOCKER} buildx create --driver docker-container --name gobuild --use
+	${DOCKER} context create build
+	${DOCKER} buildx create --driver docker-container --name gobuild --use build
 	${DOCKER} buildx inspect --bootstrap
 	${DOCKER} buildx ls
 

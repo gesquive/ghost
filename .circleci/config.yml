@@ -1,25 +1,118 @@
 
 version: 2
 jobs:
-  build:
+  build-deps:
     docker:
       - image: gesquive/go-builder:latest
     steps:
       - checkout
       - restore_cache:
           keys:
-            - go-mod-v4-{{ checksum "go.sum" }}
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run: make deps
+      - save_cache:
+          key: go-mod-v1-{{ checksum "go.sum" }}
+          paths:
+            - "{{ .Environment.GOPATH }}/vendor/go/pkg/mod"
+
+  build-app:
+    docker:
+      - image: gesquive/go-builder:latest
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
       - run: make test
       - run: make
+
+  release-app-snapshot:
+    docker:
+      - image: gesquive/go-builder:latest
+    steps:
+      - checkout
+      - run: make release-snapshot
       - save_cache:
-          key: source-v1-< .Revision >
+          key: go-dist-v1-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - dist
-            - vendor
+
+  release-app-build:
+    docker:
+      - image: gesquive/go-builder:latest
+    steps:
+      - checkout
+      - run: make release
+      - save_cache:
+          key: go-dist-v1-{{ .Environment.CIRCLE_SHA1 }}
+          paths:
+            - dist
+
+  release-docker-snapshot:
+    docker:
+      - image: gesquive/master-builder:latest
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-dist-v1-{{ .Environment.CIRCLE_SHA1 }}
+      - setup_remote_docker
+      - run: docker login -u $DOCKER_USER -p $DOCKER_TOKEN $DOCKER_REGISTRY
+      - run: docker info
+      - run: docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
+      - run: make release-docker-snapshot
+
+  release-docker-build:
+    docker:
+      - image: gesquive/master-builder:latest
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-dist-v1-{{ .Environment.CIRCLE_SHA1 }}
+      - setup_remote_docker
+      - run: docker login -u $DOCKER_USER -p $DOCKER_TOKEN $DOCKER_REGISTRY
+      - run: docker info
+      - run: docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
+      - run: make release-docker
+    
 
 workflows:
   version: 2
   build-workflow:
     jobs:
-      - build
+      - build-deps: {}
+      - build-app:
+          requires:
+            - build-deps
+      - release-app-snapshot:
+          requires:
+            - build-deps
+          filters:
+            tags:
+              ignore: /^v.*/
+      - release-app-build:
+          context: github-deploy
+          requires:
+            - build-deps
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
+      - release-docker-snapshot:
+          context: docker-deploy
+          requires:
+            - release-app-snapshot
+          filters:
+            tags:
+              ignore: /^v.*/
+      - release-docker-build:
+          context: docker-deploy
+          requires:
+            - release-app-build
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
