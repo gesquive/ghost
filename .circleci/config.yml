@@ -15,7 +15,7 @@ jobs:
           paths:
             - "{{ .Environment.GOPATH }}/vendor/go/pkg/mod"
 
-  build-app:
+  test-app:
     docker:
       - image: gesquive/go-builder:latest
     steps:
@@ -23,9 +23,22 @@ jobs:
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
-      - run: make test
       - run: make
+      - run: make test
 
+  coverage:
+    docker:
+      - image: gesquive/go-builder:latest
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - go-mod-v1-{{ checksum "go.sum" }}
+      - run: make coverage-report
+      - store_artifacts:
+          path: coverage
+      - run: codecov-bash -f coverage/coverage.dat
+    
   release-app-snapshot:
     docker:
       - image: gesquive/go-builder:latest
@@ -82,7 +95,10 @@ workflows:
   build-workflow:
     jobs:
       - build-deps: {}
-      - build-app:
+      - test-app:
+          requires:
+            - build-deps
+      - coverage:
           requires:
             - build-deps
       - release-app-snapshot:

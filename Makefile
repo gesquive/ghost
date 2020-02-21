@@ -93,7 +93,7 @@ coverage-report: ## Generate global code coverage report
 
 .PHONY: race
 race: ## Run data race detector
-	${GOCC} test -race ${PKG_LIST}
+	CGO_ENABLED=1 ${GOCC} test -race ${PKG_LIST}
 
 .PHONY: clean
 clean: ## Clean the directory tree
