@@ -2,7 +2,7 @@
 #  Makefile
 #
 #  A kickass golang v1.13.x makefile
-#  v1.13.7
+#  v1.13.8
 
 export SHELL ?= /bin/bash
 include make.cfg
