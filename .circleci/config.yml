@@ -1,4 +1,4 @@
-# Golang CircleCi config v1.13.8
+# Golang CircleCi config v1.13.9
 version: 2
 jobs:
   build-deps:
@@ -92,9 +92,12 @@ jobs:
 
 workflows:
   version: 2
-  build-workflow:
+  build:
     jobs:
-      - build-deps: {}
+      - build-deps:
+          filters:
+            tags:
+              only: /.*/
       - test-app:
           requires:
             - build-deps
