@@ -1,4 +1,4 @@
-
+# Golang CircleCi config v1.13.8
 version: 2
 jobs:
   build-deps:
@@ -46,7 +46,7 @@ jobs:
       - checkout
       - run: make release-snapshot
       - save_cache:
-          key: go-dist-v1-{{ .Environment.CIRCLE_SHA1 }}
+          key: go-snap-v1-{{ .Environment.CIRCLE_SHA1 }}
           paths:
             - dist
 
@@ -68,7 +68,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - go-dist-v1-{{ .Environment.CIRCLE_SHA1 }}
+            - go-snap-v1-{{ .Environment.CIRCLE_SHA1 }}
       - setup_remote_docker
       - run: docker login -u $DOCKER_USER -p $DOCKER_TOKEN $DOCKER_REGISTRY
       - run: docker info
@@ -116,6 +116,7 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v.*/
+              ignore: /.*/
       - release-docker-snapshot:
           context: docker-deploy
           requires:
@@ -132,3 +133,4 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v.*/
+              ignore: /.*/
