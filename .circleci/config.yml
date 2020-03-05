@@ -5,7 +5,7 @@ jobs:
     docker:
       - image: gesquive/go-builder:latest
     steps:
-      - checkout
+      - run: cci-clone
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -19,7 +19,7 @@ jobs:
     docker:
       - image: gesquive/go-builder:latest
     steps:
-      - checkout
+      - run: cci-clone
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -30,7 +30,7 @@ jobs:
     docker:
       - image: gesquive/go-builder:latest
     steps:
-      - checkout
+      - run: cci-clone
       - restore_cache:
           keys:
             - go-mod-v1-{{ checksum "go.sum" }}
@@ -43,7 +43,7 @@ jobs:
     docker:
       - image: gesquive/go-builder:latest
     steps:
-      - checkout
+      - run: cci-clone
       - run: make release-snapshot
       - save_cache:
           key: go-snap-v1-{{ .Environment.CIRCLE_SHA1 }}
@@ -54,7 +54,7 @@ jobs:
     docker:
       - image: gesquive/go-builder:latest
     steps:
-      - checkout
+      - run: cci-clone
       - run: make release
       - save_cache:
           key: go-dist-v1-{{ .Environment.CIRCLE_SHA1 }}
@@ -63,9 +63,9 @@ jobs:
 
   release-docker-snapshot:
     docker:
-      - image: gesquive/master-builder:latest
+      - image: gesquive/docker-builder:latest
     steps:
-      - checkout
+      - run: cci-clone
       - restore_cache:
           keys:
             - go-snap-v1-{{ .Environment.CIRCLE_SHA1 }}
@@ -77,9 +77,9 @@ jobs:
 
   release-docker-build:
     docker:
-      - image: gesquive/master-builder:latest
+      - image: gesquive/docker-builder:latest
     steps:
-      - checkout
+      - run: cci-clone
       - restore_cache:
           keys:
             - go-dist-v1-{{ .Environment.CIRCLE_SHA1 }}
