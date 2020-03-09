@@ -38,7 +38,7 @@ jobs:
       - store_artifacts:
           path: coverage
       - run: codecov-bash -f coverage/coverage.dat
-    
+
   release-app-snapshot:
     docker:
       - image: gesquive/go-builder:latest
@@ -88,11 +88,11 @@ jobs:
       - run: docker info
       - run: docker run --rm --privileged docker/binfmt:a7996909642ee92942dcd6cff44b9b95f08dad64
       - run: make release-docker
-    
+
 
 workflows:
   version: 2
-  build:
+  go-build:
     jobs:
       - build-deps:
           filters:

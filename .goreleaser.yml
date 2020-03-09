@@ -46,7 +46,7 @@ archives:
 checksum:
   name_template: '{{ .ProjectName }}_v{{ .Version }}_checksums.txt'
   algorithm: sha256
-  
+
 changelog:
   skip: true
   sort: asc
@@ -67,7 +67,7 @@ release:
 
   # You can change the name of the GitHub release.
   name_template: "{{.Tag}}"
-  
+
 brews:
   -
     # Github repository to push the tap to.
@@ -78,7 +78,7 @@ brews:
     # Git author used to commit to the repository.
     # Defaults are shown.
     commit_author:
-      name: releasebot
+      name: release-bot
       email: gesquive@gmail.com
 
     # Folder inside the repository to put the formula.
