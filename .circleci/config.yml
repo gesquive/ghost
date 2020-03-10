@@ -13,7 +13,8 @@ jobs:
       - save_cache:
           key: go-mod-v1-{{ checksum "go.sum" }}
           paths:
-            - "{{ .Environment.GOPATH }}/vendor/go/pkg/mod"
+            - "/go/pkg"
+            - "/go/src"
 
   test-app:
     docker:
