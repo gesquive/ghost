@@ -2,7 +2,7 @@
 #  Makefile
 #
 #  A kickass golang v1.13.x makefile
-#  v1.13.9
+#  v1.13.10
 
 export SHELL ?= /bin/bash
 include make.cfg
@@ -47,7 +47,7 @@ help:
 build: ## Compile the project
 	@echo "building ${OWNER} ${BIN_NAME} ${MK_VERSION}"
 	@echo "GOPATH=${GOPATH}"
-	${GOCC} build -a -ldflags "-X main.buildVersion=${MK_VERSION} -X main.buildDate=${MK_DATE}" -o ${BIN_NAME}
+	${GOCC} build -a -ldflags "-X main.BuildVersion=${MK_VERSION} -X main.BuildDate=${MK_DATE} -X main.BuildCommit=${MK_HASH}" -o ${BIN_NAME}
 
 .PHONY: install
 install: build ## Install the binary

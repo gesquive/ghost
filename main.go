@@ -10,10 +10,11 @@ import (
 	"github.com/spf13/viper"
 )
 
+// current build info
 var (
-	buildVersion = "v1.0.6-dev"
-	buildCommit  = ""
-	buildDate    = ""
+	BuildVersion = "v1.0.6-dev"
+	BuildCommit  = ""
+	BuildDate    = ""
 )
 
 var cfgFile string
@@ -38,7 +39,7 @@ outline of an application`,
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
 	RootCmd.SetHelpTemplate(fmt.Sprintf("%s\nVersion:\n  github.com/gesquive/ghost %s\n",
-		RootCmd.HelpTemplate(), buildVersion))
+		RootCmd.HelpTemplate(), BuildVersion))
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(-1)
@@ -92,12 +93,12 @@ func initConfig() {
 func preRun(cmd *cobra.Command, args []string) {
 	if showVersion {
 		fmt.Printf("github.com/gesquive/ghost\n")
-		fmt.Printf(" Version:    %s\n", buildVersion)
-		if len(buildCommit) > 6 {
-			fmt.Printf(" Git Commit: %s\n", buildCommit[:7])
+		fmt.Printf(" Version:    %s\n", BuildVersion)
+		if len(BuildCommit) > 6 {
+			fmt.Printf(" Git Commit: %s\n", BuildCommit[:7])
 		}
-		if buildDate != "" {
-			fmt.Printf(" Build Date: %s\n", buildDate)
+		if BuildDate != "" {
+			fmt.Printf(" Build Date: %s\n", BuildDate)
 		}
 		fmt.Printf(" Go Version: %s\n", runtime.Version())
 		fmt.Printf(" OS/Arch:    %s/%s\n", runtime.GOOS, runtime.GOARCH)
