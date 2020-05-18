@@ -10,6 +10,7 @@ scripts/
 config*.yml
 !docker/config.yml
 !.circleci/config.yml
+!pkg/config.sample.yml
 
 ghost
 

@@ -42,6 +42,8 @@ archives:
       - LICENSE*
       - README*
       - CHANGELOG*
+      - pkg/*
+      - docs/*
 
 checksum:
   name_template: '{{ .ProjectName }}_v{{ .Version }}_checksums.txt'
@@ -110,3 +112,10 @@ brews:
 
     # Packages that conflict with your package.
     conflicts: []
+
+    # Custom install script for brew.
+    # Default is 'bin.install "program"'.
+    install: |
+      bin.install "ghost"
+      man.mkpath
+      man1.install "docs/ghost.1"
